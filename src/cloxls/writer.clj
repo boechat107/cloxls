@@ -19,18 +19,19 @@
   [filename]
   (let [file (File. filename)
         wb-set (WorkbookSettings.)]
-    (.setLocale wb-set (Locale. "en" "EN"))
     (try
-      (Workbook/createWorkbook file wb-set)
+      (Workbook/createWorkbook file)
       (catch IOException e
              (str "Problem to create a xls file: " (.getMessage e))))))
+
+
+;; ============== Sheet contents ==============================
 
 
 (def ^{:dynamic true
        :doc "This variable is bound to a sheet when the WITH-SHEET macro is used."}
        *sheet* nil)
 
-;; ============== Sheet contents ==============================
 
 (defn create-sheet!
   "Creates a sheet with the given name or with a default name. Side effects only." 
@@ -38,7 +39,9 @@
    (let [n (inc (.getNumberOfSheets wb))]
      (create-sheet! wb (str "Sheet " n) n)))
   ([wb sheet-name idx]
-   (.createSheet wb sheet-name idx)))
+   (let [sheet (.createSheet wb sheet-name idx)
+         settings (.getSettings sheet)]
+     sheet)))
 
 
 ;(defn add-label!
