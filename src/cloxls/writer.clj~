@@ -1,0 +1,27 @@
+(ns cloxls.writer 
+    (:import 
+      [java.io IOException FileOutputStream]
+      [org.apache.poi.hssf.usermodel HSSFWorkbook]
+      )
+    )
+
+
+(defonce ^{:dynamic true
+            :doc "This variable is bound to the created workbook when the macro
+                  with-new-wb is used." }
+  *new-wb* nil)
+
+
+(defonce ^{:dynamic true
+            :doc "This variable is bound to a sheet when the WITH-SHEET macro is used."}
+  *sheet* nil)
+
+
+(defmacro with-new-wb
+  "Binds the variable *new-wb* to a new workbook whose name is given."
+  [filename & body]
+  `(let [file# (FileOutputStream. ~filename)]
+     (binding [*new-wb* (HSSFWorkbook.)]
+              ~@body
+              (.write *new-wb* file#)
+              (.close file#))))

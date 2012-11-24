@@ -1,4 +1,4 @@
-(ns cloxls.writer
+(ns cloxls.writer-jxl
     "Functions to write data to a XLS file.
      References:
         http://www.vogella.com/articles/JavaExcel/article.html

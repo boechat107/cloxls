@@ -1,4 +1,4 @@
-(ns cloxls.writer-test
+(ns cloxls.writer-jxl-test
     (:require
       [cloxls.writer :as w]))
 
