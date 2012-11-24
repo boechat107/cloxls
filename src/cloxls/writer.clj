@@ -1,4 +1,3 @@
-
 (ns cloxls.writer 
   (:import 
    [java.io IOException FileOutputStream]
@@ -31,22 +30,25 @@
 
 (defn create-sheet!
   "Creates a sheet with the given name or with a default name. The integer index of the
-   created sheet is returned." 
+   created sheet is returned."
+  ([] (create-sheet! *wb*))
   ([wb] 
    (let [n (inc (.getNumberOfSheets wb))]
-     (create-sheet! wb (str "Sheet " n) n)))
-  ([wb sheet-name]
+     (create-sheet! (str "Sheet " n) wb)))
+  ([sheet-name wb]
    (.createSheet wb sheet-name)
    (.getSheetIndex wb sheet-name)))
 
 
 (defmacro with-sheet
-  "Binds the variable *sheet* to a sheet with the given sheet-id of the workbook wb,
-   exposes it to the body and write the modifications to file."
-  [wb sheet-id & body]
-  `(let [wb# ~wb]
-     (binding [*sheet* (.getSheet wb# ~sheet-id)]
-       ~@body)))
+  "Binds the variable *sheet* to a sheet with the given sheet-id of the workbook *wb*,
+   exposes it to the body and write the modifications to file. "
+  [sheet-id & body]
+  `(let [sheet-id# ~sheet-id]
+     (binding [*sheet* (if (number? sheet-id#)
+                         (.getSheetAt *wb* sheet-id#)
+                         (.getSheet *wb* sheet-id#))]
+      ~@body)))
 
 ;; ============== Adding cell contents ==============================
 
@@ -59,6 +61,7 @@
     (cond
       (and (string? data)
            (= \= (get data 0))) (.setCellFormula cell (subs data 1))
+      (number? data) (.setCellValue cell (double data))
       :else (.setCellValue cell data))))
 
 
