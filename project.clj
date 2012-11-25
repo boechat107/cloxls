@@ -1,4 +1,4 @@
-(defproject cloxls "0.1.0"
+(defproject cloxls "0.1.1"
   :description "Clojure library to write and read XLS files."
   :url "https://github.com/boechat107/cloxls"
   :license {:name "Eclipse Public License"
@@ -6,5 +6,10 @@
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [jxl "2.6.12"]
                  [poi "3.8"]]
-  :resource-paths ["resources"]
+  :profiles {:dev {:resource-paths ["resources"] :dependencies [[markdown-clj "0.9.10"]]}}
+;  :dev-dependencies [[markdown-clj "0.9.10"]]
+;  :resource-paths ["resources"]
+  :html5-docs-ns-includes #"^cloxls\..*"
+  :html5-docs-ns-excludes #".*jxl.*"
+  :html5-docs-repository-url "https://github.com/boechat107/cloxls"
   )

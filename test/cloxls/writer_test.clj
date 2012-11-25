@@ -1,6 +1,6 @@
 (ns cloxls.writer-test
   (:use
-   [cloxls.writer]))
+   [cloxls.core]))
 
 
 (defn test1
@@ -15,12 +15,20 @@
       (create-row-data! 3 ["Total employees" "=B2+B3"]))))
 
 
-(defn test2
+(defn writing-test
   []
-  (with-new-wb "test_poi2.xls"
+  (with-new-wb "test_poi.xls"
     (create-sheet!)
+    ;; The first created sheet has the default index 0.
     (with-sheet 0
       (create-2d-data! [["Company" "Number of employees"]
-                        ["Dog show" 10]
+                        ["Dog show" 15]
                         ["Lazy comp" 30]
-                        ["Total employees" "=B2+B3"]]))))
+                        ["Total employees" "=B2+B3"]])
+      (create-row-data! 4 ["Alternative" "function"]))))
+
+
+(defn reading-test
+  []
+  (with-wb "test_poi.xls"
+    (sheet->matrix 0 true)))

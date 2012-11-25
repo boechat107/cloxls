@@ -3,7 +3,8 @@
         http://poi.apache.org/spreadsheet/quick-guide.html"
   (:import 
    [java.io IOException FileOutputStream FileInputStream]
-   [org.apache.poi.hssf.usermodel HSSFWorkbook]
+   [org.apache.poi.hssf.usermodel HSSFWorkbook HSSFCell HSSFFormulaEvaluator]
+   [org.apache.poi.poifs.filesystem POIFSFileSystem]
    )
   )
 
@@ -30,14 +31,15 @@
        (.close file#))))
 
 
-(defn with-wb
+(defmacro with-wb
   "Binds the variable  *new-wb* to a existing workbook whose name is given.
    Use this macro just for reading."
   [filename & body]
   `(let [file# (FileInputStream. ~filename)]
-     (binding [*wb* (HSSFWorkbook. file#)]
-       ~@body
-       (.close file#))))
+     (binding [*wb* (HSSFWorkbook. (POIFSFileSystem. file#))]
+       (let [res# ~@body] 
+         (.close file#)
+         res#))))
 
 ;; ============== Sheet manipulation ==============================
 
@@ -101,3 +103,44 @@
   ([sheet data]
      (doseq [[r-id ld] (coll-idx-data data)]
        (create-row-data! sheet r-id ld))))
+
+
+;; ============== Reading cell contents ==============================
+
+(defn get-cell-content
+  "Gets the content of the cell considering its type. If formula-eval? is true, the cell 
+   is evaluated and formulas results are gotten."
+  ;; TODO: support date format.
+  ([cell formula-eval?] (get-cell-content *wb* cell formula-eval?))
+  ([wb cell formula-eval?]
+   (let [eval-type (when formula-eval?
+                     (-> (.getCreationHelper wb)
+                         (.createFormulaEvaluator)
+                         (.evaluateFormulaCell cell)))
+         cell-type (if (or (nil? eval-type) (= -1 eval-type))
+                     (.getCellType cell)
+                     eval-type)]
+     (condp = cell-type
+       HSSFCell/CELL_TYPE_STRING (-> (.getRichStringCellValue cell)
+                                     (.getString))
+       HSSFCell/CELL_TYPE_NUMERIC (.getNumericCellValue cell)
+       HSSFCell/CELL_TYPE_BOOLEAN (.getBooleanCellValue cell)
+       HSSFCell/CELL_TYPE_FORMULA (.getCellFormula cell)))))
+
+
+(defn sheet->matrix
+  "Gets the contents of specific sheet of a workbook. Formulas are gotten as calculated 
+   values if it is possible.
+   The sheet-id must be a integer (index) or a string (name).
+   If formula-eval? is true, the cells are evaluated and formulas results are gotten
+   (default false)."
+  ([sheet-id] (sheet->matrix *wb* sheet-id nil))
+  ([sheet-id formula-eval?] (sheet->matrix *wb* sheet-id formula-eval?))
+  ([wb sheet-id formula-eval?]
+     (let [sheet (if (number? sheet-id)
+                   (.getSheetAt wb sheet-id)
+                   (.getSheet wb sheet-id))]
+       (vec (map (fn [row-obj]
+                   (vec (map #(get-cell-content wb % formula-eval?)
+                             (iterator-seq (.cellIterator row-obj)))))
+                 (iterator-seq (.rowIterator sheet)))))))
