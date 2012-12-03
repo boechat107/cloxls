@@ -3,7 +3,7 @@
         http://poi.apache.org/spreadsheet/quick-guide.html"
   (:import 
    [java.io IOException FileOutputStream FileInputStream]
-   [org.apache.poi.hssf.usermodel HSSFWorkbook HSSFCell HSSFFormulaEvaluator]
+   [org.apache.poi.hssf.usermodel HSSFWorkbook HSSFCell HSSFSheet HSSFFormulaEvaluator]
    [org.apache.poi.poifs.filesystem POIFSFileSystem]
    )
   )
@@ -37,7 +37,7 @@
   [filename & body]
   `(let [file# (FileInputStream. ~filename)]
      (binding [*wb* (HSSFWorkbook. (POIFSFileSystem. file#))]
-       (let [res# ~@body] 
+       (let [res# (do ~@body)] 
          (.close file#)
          res#))))
 
@@ -59,11 +59,16 @@
   "Binds the variable *sheet* to a sheet with the given sheet-id of the workbook *wb*,
    exposes it to the body and write the modifications to file. "
   [sheet-id & body]
+  {:pre [(integer? sheet-id)]}
   `(let [sheet-id# ~sheet-id]
      (binding [*sheet* (if (number? sheet-id#)
                          (.getSheetAt *wb* sheet-id#)
                          (.getSheet *wb* sheet-id#))]
-      ~@body)))
+      (let [res# (do ~@body)]
+        ;; Auto resize the columns' width.
+;        (doseq [c# (range (get-num-cols))]
+;          (.autoSizeColumn *sheet* c#))
+        res#))))
 
 ;; ============== Adding cell contents ==============================
 
@@ -150,6 +155,7 @@
   ([sheet-id] (sheet->matrix *wb* sheet-id nil))
   ([sheet-id formula-eval?] (sheet->matrix *wb* sheet-id formula-eval?))
   ([wb sheet-id formula-eval?]
+   {:pre [(instance? HSSFWorkbook wb) (or (string? sheet-id) (integer? sheet-id))]}
      (let [sheet (if (number? sheet-id)
                    (.getSheetAt wb sheet-id)
                    (.getSheet wb sheet-id))]
@@ -157,3 +163,26 @@
                    (vec (map #(get-cell-content wb % formula-eval?)
                              (iterator-seq (.cellIterator row-obj)))))
                  (iterator-seq (.rowIterator sheet)))))))
+
+
+(defn get-num-cols
+  "Iterates over all rows of a sheet and returns the maximum number of columns of all 
+   rows."
+  ([] (get-num-cols *sheet*))
+  ([sheet]
+   {:pre [(instance? HSSFSheet sheet)]}
+   (->> (.rowIterator sheet)
+        (iterator-seq)
+        (map #(.getLastCellNum %))
+        (reduce max))))
+
+;; ============== Format functions ==============================
+
+(defn autosize-columns!
+  "Resize the columns width to fit its contents. If the number of columns is given, this 
+   function works much faster for big tables."
+  ([] (autosize-columns! *sheet* (get-num-cols)))
+  ([n-cols] (autosize-columns! *sheet* n-cols))
+  ([sheet n-cols]
+   (doseq [c (range n-cols)]
+     (.autoSizeColumn sheet c))))
