@@ -3,7 +3,8 @@
         http://poi.apache.org/spreadsheet/quick-guide.html"
   (:import 
    [java.io IOException FileOutputStream FileInputStream]
-   [org.apache.poi.hssf.usermodel HSSFWorkbook HSSFCell HSSFSheet HSSFFormulaEvaluator]
+   [org.apache.poi.hssf.usermodel HSSFWorkbook HSSFCell HSSFSheet HSSFFormulaEvaluator
+                                  HSSFRow]
    [org.apache.poi.poifs.filesystem POIFSFileSystem]
    )
   )
@@ -79,23 +80,25 @@
    If data is a map, there are the following options:
         :value  The real value of the cell, like a number, a label or a formula.
         :hidden? If true, the cell is hidden (default false)"
+  ;; TODO: maps and styles.
   ([row-obj c-id data] (create-cell! *wb* row-obj c-id data))
-  ([wb row-obj c-id data]
-  (let [cell (.createCell row-obj c-id)
-        style (.createCellStyle wb) 
-        {:keys [value hidden?]} data
-        cell-val (or value data)]
-    (do 
-      (when hidden? (.setHidden style true))
-      (.setCellStyle cell style)) 
-    (cond
-      ;; Formula cell, string whose first character is =.
-      (and (string? cell-val)
-           (= \= (get cell-val 0))) (.setCellFormula cell (subs cell-val 1))
-      ;; Number cell.
-      (number? cell-val) (.setCellValue cell (double cell-val))
-      ;; Label cell, a string.
-      :else (.setCellValue cell (str cell-val))))))
+  ([wb row-obj c-id data] 
+   {:pre [(instance? HSSFRow row-obj) (integer? c-id) (or (map? data) (not (coll? data)))]}
+   (let [cell (.createCell row-obj c-id)
+         style (.createCellStyle wb) 
+         {:keys [value hidden?]} data
+         cell-val (or value data)]
+     (do 
+       (when hidden? (.setHidden style true))
+       (.setCellStyle cell style)) 
+     (cond
+       ;; Formula cell, string whose first character is =.
+       (and (string? cell-val)
+            (= \= (get cell-val 0))) (.setCellFormula cell (subs cell-val 1))
+       ;; Number cell.
+       (number? cell-val) (.setCellValue cell (double cell-val))
+       ;; Label cell, a string.
+       :else (.setCellValue cell (str cell-val))))))
 
 
 (defn- coll-idx-data
@@ -115,6 +118,18 @@
          (create-cell! row-obj c-id d)))))
 
 
+(defn create-col-data!
+  "Creates a column of data at the column c-id, starting at the row r-start."
+  ([c-id data] (create-col-data! *sheet* c-id 0 data))
+  ([c-id r-start data] (create-col-data! *sheet* c-id r-start data))
+  ([sheet c-id r-start data] 
+   {:pre [(instance? HSSFSheet sheet) (integer? c-id) (integer? r-start) (coll? data)]} 
+   (let [rows-id (range r-start (count data))
+         get-row (fn [r] (or (.getRow sheet r) (.createRow sheet r)))]
+     (doseq [[r-obj d] (map vector (map get-row rows-id) data)]
+       (create-cell! r-obj c-id d)))))
+
+
 (defn create-2d-data!
   "Adds the data to a sheet as a matrix, starting from line 0 and column 0."
   ([data] (create-2d-data! *sheet* data))
@@ -127,7 +142,7 @@
 
 (defn get-cell-content
   "Gets the content of the cell considering its type. If formula-eval? is true, the cell 
-   is evaluated and formulas results are gotten."
+   is evaluated and formulas results are returned instead."
   ;; TODO: support date format.
   ([cell formula-eval?] (get-cell-content *wb* cell formula-eval?))
   ([wb cell formula-eval?]
@@ -147,10 +162,10 @@
 
 
 (defn sheet->matrix
-  "Gets the contents of specific sheet of a workbook. Formulas are gotten as calculated 
+  "Gets the contents of specific sheet of a workbook. Formulas are returned as calculated 
    values if it is possible.
    The sheet-id must be a integer (index) or a string (name).
-   If formula-eval? is true, the cells are evaluated and formulas results are gotten
+   If formula-eval? is true, the cells are evaluated and formulas results are returned
    (default false)."
   ([sheet-id] (sheet->matrix *wb* sheet-id nil))
   ([sheet-id formula-eval?] (sheet->matrix *wb* sheet-id formula-eval?))
