@@ -102,19 +102,19 @@
 
 
 (defn- coll-idx-data
-  "Returns a new collection composed of tuples (idx, element), where idx is the index of
-   the element in the original collection."
-  [coll]
-  (partition 2 (interleave (range (count coll)) coll)))
+  "Returns a range of numbers corresponding to the index of each element of coll. A offset
+   can be used as a starting number."
+  [coll start]
+  (range start (+ start (count coll))))
 
 
 (defn create-row-data!
   "Creates a row of data from a data collection."
-  ;; TODO: offset values.
-  ([r-id data] (create-row-data! *sheet* r-id data))
-  ([sheet r-id data]
+  ([r-id data] (create-row-data! *sheet* r-id 0 data))
+  ([r-id c-start data] (create-row-data! *sheet* r-id c-start data))
+  ([sheet r-id c-start data]
      (let [row-obj (.createRow sheet r-id)]
-       (doseq [[c-id d] (coll-idx-data data)]
+       (doseq [[c-id d] (map vector (coll-idx-data data c-start) data)]
          (create-cell! row-obj c-id d)))))
 
 
@@ -124,18 +124,20 @@
   ([c-id r-start data] (create-col-data! *sheet* c-id r-start data))
   ([sheet c-id r-start data] 
    {:pre [(instance? HSSFSheet sheet) (integer? c-id) (integer? r-start) (coll? data)]} 
-   (let [rows-id (range r-start (count data))
+   (let [rows-id (coll-idx-data data r-start)
          get-row (fn [r] (or (.getRow sheet r) (.createRow sheet r)))]
      (doseq [[r-obj d] (map vector (map get-row rows-id) data)]
        (create-cell! r-obj c-id d)))))
 
 
 (defn create-2d-data!
-  "Adds the data to a sheet as a matrix, starting from line 0 and column 0."
-  ([data] (create-2d-data! *sheet* data))
-  ([sheet data]
-     (doseq [[r-id ld] (coll-idx-data data)]
-       (create-row-data! sheet r-id ld))))
+  "Adds the data to a sheet as a matrix, starting from line r-start and column c-start."
+  ([data] (create-2d-data! *sheet* 0 0 data))
+  ([r-start c-start data] (create-2d-data! *sheet* r-start c-start data))
+  ([sheet r-start c-start data]
+   {:pre [(instance? HSSFSheet sheet) (integer? r-start) (integer? c-start) (coll? data)]}
+   (doseq [[r-id ld] (map vector (coll-idx-data data r-start) data)]
+     (create-row-data! sheet r-id c-start ld))))
 
 
 ;; ============== Reading cell contents ==============================

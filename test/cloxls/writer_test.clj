@@ -28,7 +28,7 @@
       (create-row-data! 4 ["Alternative" "function"])
       (create-row-data! 5 ["Form" "=B4+B7"])
       ;; Add data to the column E.
-      (create-col-data! 4 ["Column" "data"])
+      (create-col-data! 4 2 ["Column" "data"])
       (create-row-data! 6 ["Hidden cell" {:value 20 :hidden? true}])
       ;; Resize the columns' width to fit contents.
       (autosize-columns!))))

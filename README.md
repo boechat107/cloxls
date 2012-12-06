@@ -8,7 +8,7 @@ A Clojure library designed to write XLS files using the
 Add to the dependencies of the leiningen project:
 
 ```clj
-[org.clojars.boechat107/cloxls "0.1.1"]
+[org.clojars.boechat107/cloxls "0.1.2"]
 ```
 
 ## Usage
@@ -28,8 +28,8 @@ Add to the dependencies of the leiningen project:
                         ["Total employees" "=B2+B3"]])
       (create-row-data! 4 ["Alternative" "function"])
       (create-row-data! 5 ["Form" "=B4+B7"])
-      ;; Add data to the column E.
-      (create-col-data! 4 ["Column" "data"])
+      ;; Add data to the column E, starting at row 2.
+      (create-col-data! 4 2 ["Column" "data"])
       (create-row-data! 6 ["Hidden cell" {:value 20 :hidden? true}])
       ;; Resize the columns' width to fit contents.
       (autosize-columns!))))
