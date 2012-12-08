@@ -109,11 +109,12 @@
 
 
 (defn create-row-data!
-  "Creates a row of data from a data collection."
+  "Adds a entire or partial row of data from a data collection to a sheet."
   ([r-id data] (create-row-data! *sheet* r-id 0 data))
   ([r-id c-start data] (create-row-data! *sheet* r-id c-start data))
   ([sheet r-id c-start data]
-     (let [row-obj (.createRow sheet r-id)]
+   {:pre [(instance? HSSFSheet sheet) (integer? r-id) (integer? c-start) (coll? data)]} 
+     (let [row-obj (or (.getRow sheet r-id) (.createRow sheet r-id))]
        (doseq [[c-id d] (map vector (coll-idx-data data c-start) data)]
          (create-cell! row-obj c-id d)))))
 

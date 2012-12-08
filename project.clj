@@ -1,4 +1,4 @@
-(defproject org.clojars.boechat107/cloxls "0.1.2"
+(defproject org.clojars.boechat107/cloxls "0.1.2-SNAPSHOT"
   :description "Clojure library to write and read XLS files."
   :url "https://github.com/boechat107/cloxls"
   :license {:name "Eclipse Public License"
