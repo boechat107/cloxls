@@ -178,8 +178,10 @@
                    (.getSheetAt wb sheet-id)
                    (.getSheet wb sheet-id))]
        (vec (map (fn [row-obj]
-                   (vec (map #(get-cell-content wb % formula-eval?)
-                             (iterator-seq (.cellIterator row-obj)))))
+                   (vec (map #(let [cell (.getCell row-obj %)]
+                                (when cell
+                                  (get-cell-content wb cell formula-eval?)))
+                             (range (.getLastCellNum row-obj)))))
                  (iterator-seq (.rowIterator sheet)))))))
 
 
