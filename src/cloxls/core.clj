@@ -75,29 +75,18 @@
 (defn create-cell!
   "Creates a cell, adds data to it and sets it on the sheet/workbook.
    The data could be a number or a string. If the string starts with =, a formula is
-   created.
-   If data is a map, there are the following options:
-        :value  The real value of the cell, like a number, a label or a formula.
-        :hidden? If true, the cell is hidden (default false)"
-  ;; TODO: maps and styles.
-  ([row-obj c-id data] (create-cell! *wb* row-obj c-id data))
-  ([wb row-obj c-id data] 
-   {:pre [(instance? HSSFRow row-obj) (integer? c-id) (or (map? data) (not (coll? data)))]}
-   (let [cell (.createCell row-obj c-id)
-         style (.createCellStyle wb) 
-         {:keys [value hidden?]} data
-         cell-val (or value data)]
-     (do 
-       (when hidden? (.setHidden style true))
-       (.setCellStyle cell style)) 
+   created."
+  [row-obj c-id data] 
+   {:pre [(instance? HSSFRow row-obj) (integer? c-id)]}
+   (let [cell (.createCell row-obj c-id)]
      (cond
        ;; Formula cell, string whose first character is =.
-       (and (string? cell-val)
-            (= \= (get cell-val 0))) (.setCellFormula cell (subs cell-val 1))
+       (and (string? data)
+            (= \= (get data 0))) (.setCellFormula cell (subs data 1))
        ;; Number cell.
-       (number? cell-val) (.setCellValue cell (double cell-val))
+       (number? data) (.setCellValue cell (double data))
        ;; Label cell, a string.
-       :else (.setCellValue cell (str cell-val))))))
+       :else (.setCellValue cell (str data)))))
 
 
 (defn- coll-idx-data
