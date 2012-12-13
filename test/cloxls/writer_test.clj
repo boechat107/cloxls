@@ -31,6 +31,9 @@
       ;; Add data to the column E.
       (create-col-data! 4 2 ["Column" "data"])
       (create-row-data! 6 ["Hidden cell" {:value 20 :hidden? true}])
+      ;; Conditional formatting: change manually the values of the cells composing
+      ;; the rule and see what happens! :)
+      (conditional-formatting! "$B$2>10" "A4:B4" {:font {:color :blue}})
       ;; Resize the columns' width to fit contents.
       (autosize-columns!))))
 

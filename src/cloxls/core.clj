@@ -5,9 +5,8 @@
    [java.io IOException FileOutputStream FileInputStream]
    [org.apache.poi.hssf.usermodel HSSFWorkbook HSSFCell HSSFSheet HSSFFormulaEvaluator
                                   HSSFRow]
-   [org.apache.poi.poifs.filesystem POIFSFileSystem]
-   )
-  )
+   [org.apache.poi.ss.util CellRangeAddress]
+   [org.apache.poi.poifs.filesystem POIFSFileSystem]))
 
 
 (defonce ^{:dynamic true
@@ -206,3 +205,42 @@
   ([sheet n-cols]
    (doseq [c (range n-cols)]
      (.autoSizeColumn sheet c))))
+
+(defn- get-color-idx
+  "Gets the integer index of a color.
+   Possible colors:
+   http://poi.apache.org/apidocs/org/apache/poi/hssf/util/HSSFColor.html"
+  [color]
+  {:pre [(keyword? color)]}
+  ;; TODO: consider these solutions
+  ;; http://stackoverflow.com/questions/3748559/clojure-creating-new-instance-from-string-class-name
+  ;; http://stackoverflow.com/questions/5815568/accessing-static-fields-of-a-class-from-a-non-classname-symbol 
+  (org.apache.poi.hssf.util.HSSFColor$BLUE/index))
+
+(defn conditional-formatting!
+  "Formats a region (a simple string) or regions (a seq of strings) of cells
+   following a rule (string). objs is a map of cell components that can be modified.
+   EXAMPLES:
+        (conditional-formatting \"A1>10\" \"B1:B10\" {:font {:color :blue}})
+   :font options
+        :color  blue
+        :bold   true, false
+        :italic true, false"
+  ([rule regions objs] (conditional-formatting! *sheet* rule regions objs))
+  ([sheet rule regions objs]
+   {:pre [(instance? HSSFSheet sheet) (string? rule) (or (coll? regions)
+                                                         (string? regions)) 
+          (map? objs)]} 
+   (let [sheet-cf (.getSheetConditionalFormatting sheet)
+         cf-rule (.createConditionalFormattingRule sheet-cf rule)
+         reg-array (->> (if (coll? regions) regions [regions])
+                        (map #(CellRangeAddress/valueOf %))
+                        (into-array))
+         font-conf (:font objs)]
+     (when font-conf
+       (doto (.createFontFormatting cf-rule)
+             (.setFontStyle (or (:italic font-conf) false) 
+                            (or (:bold font-conf) false))
+             (.setFontColorIndex (get-color-idx (:color font-conf)))))
+     (.addConditionalFormatting sheet-cf reg-array cf-rule)
+     nil)))
