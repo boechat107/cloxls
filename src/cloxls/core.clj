@@ -3,8 +3,7 @@
         http://poi.apache.org/spreadsheet/quick-guide.html"
   (:import 
    [java.io IOException FileOutputStream FileInputStream]
-   [org.apache.poi.hssf.usermodel HSSFWorkbook HSSFCell HSSFSheet HSSFFormulaEvaluator
-                                  HSSFRow]
+   [org.apache.poi.hssf.usermodel HSSFWorkbook HSSFCell HSSFSheet HSSFRow]
    [org.apache.poi.ss.util CellRangeAddress]
    [org.apache.poi.poifs.filesystem POIFSFileSystem]))
 
@@ -201,10 +200,9 @@
    http://poi.apache.org/apidocs/org/apache/poi/hssf/util/HSSFColor.html"
   [color]
   {:pre [(keyword? color)]}
-  ;; TODO: consider these solutions
-  ;; http://stackoverflow.com/questions/3748559/clojure-creating-new-instance-from-string-class-name
-  ;; http://stackoverflow.com/questions/5815568/accessing-static-fields-of-a-class-from-a-non-classname-symbol 
-  (org.apache.poi.hssf.util.HSSFColor$BLUE/index))
+  (let [prefix "org.apache.poi.hssf.util.HSSFColor$"
+        c-str (.toUpperCase (name color))]
+    (eval (symbol (str prefix c-str "/index")))))
 
 (defn conditional-formatting!
   "Formats a region (a simple string) or regions (a seq of strings) of cells
@@ -212,7 +210,7 @@
    EXAMPLES:
         (conditional-formatting \"A1>10\" \"B1:B10\" {:font {:color :blue}})
    :font options
-        :color  blue
+        :color  :blue, :green, :black ... (see http://poi.apache.org/apidocs/org/apache/poi/hssf/util/HSSFColor.html)
         :bold   true, false
         :italic true, false"
   ([rule regions objs] (conditional-formatting! *sheet* rule regions objs))

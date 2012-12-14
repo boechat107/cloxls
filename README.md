@@ -31,7 +31,9 @@ Add to the dependencies of the leiningen project:
       (create-row-data! 5 ["Form" "=B4+B7"])
       ;; Add data to the column E, starting at row 2.
       (create-col-data! 4 2 ["Column" "data"])
-      (create-row-data! 6 ["Hidden cell" {:value 20 :hidden? true}])
+      ;; Conditional formatting: change manually the values of the cells composing
+      ;; the rule and see what happens! :)
+      (conditional-formatting! "$B$2>10" "A4:B4" {:font {:color :green}})
       ;; Resize the columns' width to fit contents.
       (autosize-columns!))))
 
@@ -42,6 +44,17 @@ Add to the dependencies of the leiningen project:
 ```
 
 See [docs](cloxls/blob/master/docs/index.html) for more details about the library functions.
+
+## Features
+
+* A new XLS file can be created;
+* Data can be add as a row, as a column or as a matrix;
+* The type of the data can be number, text (a label) or a formula;
+* The columns' width can be auto resized;
+* Conditional formatting can be defined (for now, only font colors is modifiable);
+* XLS files can be read and its contents returned as clojure vectors;
+* The formulas of a XLS file can be evaluated before a reading, getting the result values 
+instead of the formula definition.
 
 ## License
 
