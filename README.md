@@ -33,7 +33,9 @@ Add to the dependencies of the leiningen project:
       (create-col-data! 4 2 ["Column" "data"])
       ;; Conditional formatting: change manually the values of the cells composing
       ;; the rule and see what happens! :)
-      (conditional-formatting! "$B$2>10" "A4:B4" {:font {:color :green}})
+      (conditional-formatting! ["A4:B4" "A1:B1"]
+                               [{:rule "$B$2>10", :font {:color :green}}
+                                {:rule "$B$2<=10", :font {:color :blue}}])
       ;; Resize the columns' width to fit contents.
       (autosize-columns!))))
 
@@ -48,7 +50,7 @@ See [docs](cloxls/blob/master/docs/index.html) for more details about the librar
 ## Features
 
 * A new XLS file can be created;
-* Data can be add as a row, as a column or as a matrix;
+* Data is inputed as a row, as a column or as a matrix;
 * The type of the data can be number, text (a label) or a formula;
 * The columns' width can be auto resized;
 * Conditional formatting can be defined (for now, only font colors is modifiable);
