@@ -45,7 +45,7 @@ Add to the dependencies of the leiningen project:
     (sheet->matrix 0 true)))
 ```
 
-See [docs](boechat107.github.com/cloxls) for more details about the library functions.
+See [docs](http://boechat107.github.com/cloxls) for more details about the library functions.
 
 ## Features
 

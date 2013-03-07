@@ -220,16 +220,17 @@
 
 (defn conditional-formatting!
   "Formats a region (a simple string) or regions (a seq of strings) of cells
-   following a rule (string). objs is a map of cell components that can be modified.
-   EXAMPLES:
-        (conditional-formatting! \"B1:B10\" {:rule \"A1>10\", :font {:color :blue}})
-        (conditional-formatting! [\"A4:B4\" \"A1:B1\"]
-                                       [{:rule \"$B$2>10\", :font {:color :green}}
-                                        {:rule \"$B$2<=10\", :font {:color :blue}}])
-   :font options
-        :color  :blue, :green, :black ... (see http://poi.apache.org/apidocs/org/apache/poi/hssf/util/HSSFColor.html)
-        :bold   true, false
-        :italic true, false"
+   following a rule (string). objs is a map of cell components that can be modified.  
+   EXAMPLES: 
+    (conditional-formatting! \"B1:B10\"
+                             {:rule \"A1>10\", :font {:color :blue}})
+    (conditional-formatting! [\"A4:B4\" \"A1:B1\"]
+                             [{:rule \"$B$2>10\", :font {:color :green}}
+                              {:rule \"$B$2<=10\", :font {:color :blue}}])
+    :font options
+          :color  :blue, :green, :black ... (see http://poi.apache.org/apidocs/org/apache/poi/hssf/util/HSSFColor.html)
+          :bold   true, false
+          :italic true, false"
   ([regions f-map] (conditional-formatting! *sheet* regions f-map))
   ([sheet regions f-map]
    {:pre [(instance? HSSFSheet sheet) (or (coll? regions) (string? regions)) 
