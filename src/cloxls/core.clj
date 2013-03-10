@@ -195,27 +195,38 @@
      (.autoSizeColumn sheet c))))
 
 (defn- get-color-idx
-  "Gets the integer index of a color.
+  "Gets the integer index of a color. For RGB values, a similar color of the default 
+  palette is used.
    Possible colors:
    http://poi.apache.org/apidocs/org/apache/poi/hssf/util/HSSFColor.html"
-  [color]
-  {:pre [(keyword? color)]}
-  (let [prefix "org.apache.poi.hssf.util.HSSFColor$"
-        c-str (.toUpperCase (name color))]
-    (eval (symbol (str prefix c-str "/index")))))
+  [wb color]
+  {:pre [((some-fn keyword? map? vector?) color)]}
+  (if (keyword? color)
+    (-> (name color)
+        (.toUpperCase)
+        (#(str "org.apache.poi.hssf.util.HSSFColor$" % "/index"))
+        symbol
+        eval) 
+    (let [[r g b] (if (map? color)
+                    (map #(% color) [:r :g :b])
+                    color)]
+          (-> (.getCustomPalette wb) 
+              (.findSimilarColor r g b)
+              (.getIndex)))))
 
 (defn- formatting-rule
   "Returns a ConditionalFormattingRule obeject from a SheetConditionalFormatting
    object (sheet-cf), a rule (string) and a map of objects to be formated."
-  [sheet-cf rule-map]
+  [wb sheet-cf rule-map]
   (let [rule (:rule rule-map)
         font-conf (:font rule-map)
         cf-rule (.createConditionalFormattingRule sheet-cf rule)]
     (when font-conf
       (doto (.createFontFormatting cf-rule)
-            (.setFontStyle (or (:italic font-conf) false) 
-                           (or (:bold font-conf) false))
-            (.setFontColorIndex (get-color-idx (:color font-conf)))))
+        (.setFontStyle (or (:italic font-conf) false) 
+                       (or (:bold font-conf) false))
+        (.setFontColorIndex (->> (:color font-conf)
+                                 (get-color-idx wb)))))
     cf-rule))
 
 (defn conditional-formatting!
@@ -225,21 +236,24 @@
     (conditional-formatting! \"B1:B10\"
                              {:rule \"A1>10\", :font {:color :blue}})
     (conditional-formatting! [\"A4:B4\" \"A1:B1\"]
-                             [{:rule \"$B$2>10\", :font {:color :green}}
-                              {:rule \"$B$2<=10\", :font {:color :blue}}])
+                             [{:rule \"$B$2>10\", :font {:color {:r 0 :g 200 :b 0}}}
+                              {:rule \"$B$2<=10\", :font {:color [150 50 50]}}])
     :font options
           :color  :blue, :green, :black ... (see http://poi.apache.org/apidocs/org/apache/poi/hssf/util/HSSFColor.html)
+                  or RGB values using a map or a vector
           :bold   true, false
           :italic true, false"
-  ([regions f-map] (conditional-formatting! *sheet* regions f-map))
-  ([sheet regions f-map]
+  ([regions f-map] (conditional-formatting! *wb* *sheet* regions f-map))
+  ([wb sheet regions f-map]
    {:pre [(instance? HSSFSheet sheet) (or (coll? regions) (string? regions)) 
           (or (coll? f-map) (map? f-map))]} 
    (let [sheet-cf (.getSheetConditionalFormatting sheet)
+         ;; Array of regions affected by the formatting rule..
          reg-array (->> (if (coll? regions) regions [regions])
                         (map #(CellRangeAddress/valueOf %))
                         (into-array))]
-     (->> (map #(formatting-rule sheet-cf %) (if (coll? f-map) f-map [f-map]))
+     (->> (if (coll? f-map) f-map [f-map])
+          (map #(formatting-rule wb sheet-cf %))
           (into-array)
           (.addConditionalFormatting sheet-cf reg-array))
      nil)))

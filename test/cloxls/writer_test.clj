@@ -34,7 +34,8 @@
       ;; the rule and see what happens! :)
       (conditional-formatting! ["A4:B4" "A1:B1"]
                                [{:rule "$B$2>10", :font {:color :green}}
-                                {:rule "$B$2<=10", :font {:color :blue}}])
+                                ;; Using a RGB similar color.
+                                {:rule "$B$2<=10", :font {:color [150 0 50]}}])
       ;; Resize the columns' width to fit contents.
       (autosize-columns!))))
 

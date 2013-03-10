@@ -8,7 +8,7 @@ A Clojure library designed to write XLS files using the
 Add to the dependencies of the leiningen project:
 
 ```clj
-[org.clojars.boechat107/cloxls "0.1.2-SNAPSHOT"]
+[org.clojars.boechat107/cloxls "0.2.0"]
 ```
 
 ## Usage
@@ -35,7 +35,8 @@ Add to the dependencies of the leiningen project:
       ;; the rule and see what happens! :)
       (conditional-formatting! ["A4:B4" "A1:B1"]
                                [{:rule "$B$2>10", :font {:color :green}}
-                                {:rule "$B$2<=10", :font {:color :blue}}])
+                                ;; Using RGB values.
+                                {:rule "$B$2<=10", :font {:color {:r 0 :g 0 :b 200}}}])
       ;; Resize the columns' width to fit contents.
       (autosize-columns!))))
 
