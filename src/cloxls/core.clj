@@ -150,6 +150,23 @@
        HSSFCell/CELL_TYPE_BOOLEAN (.getBooleanCellValue cell)
        HSSFCell/CELL_TYPE_FORMULA (.getCellFormula cell)))))
 
+(defn get-sheet
+  "Finds a sheet by its index or by its name and returns it. If the sheet does not
+  exist, nil is returned."
+  [wb sheet-id]
+  (if (number? sheet-id)
+    (.getSheetAt wb sheet-id)
+    (.getSheet wb sheet-id)))
+
+(defn get-rows
+  "Returns a sequence of row objects of the given sheet."
+  [sheet]
+  (iterator-seq (.rowIterator sheet)))
+
+(defn get-cells-of-row
+  "Returns a sequence of cell objects of the given row."
+  [row]
+  (map #(.getCell row %) (range (.getLastCellNum row))))
 
 (defn sheet->matrix
   "Gets the contents of specific sheet of a workbook. Formulas are returned as calculated 
@@ -161,15 +178,11 @@
   ([sheet-id formula-eval?] (sheet->matrix *wb* sheet-id formula-eval?))
   ([wb sheet-id formula-eval?]
    {:pre [(instance? HSSFWorkbook wb) (or (string? sheet-id) (integer? sheet-id))]}
-     (let [sheet (if (number? sheet-id)
-                   (.getSheetAt wb sheet-id)
-                   (.getSheet wb sheet-id))]
+     (let [sheet (get-sheet wb sheet-id)]
        (vec (map (fn [row-obj]
-                   (vec (map #(let [cell (.getCell row-obj %)]
-                                (when cell
-                                  (get-cell-content wb cell formula-eval?)))
-                             (range (.getLastCellNum row-obj)))))
-                 (iterator-seq (.rowIterator sheet)))))))
+                   (vec (map #(when % (get-cell-content wb % formula-eval?))
+                             (get-cells-of-row row-obj))))
+                 (get-rows sheet))))))
 
 
 (defn get-num-cols
