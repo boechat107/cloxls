@@ -1,6 +1,7 @@
 (ns cloxls.writer-test
   (:use
-   [cloxls.core]))
+    [cloxls.core]
+    :reload-all))
 
 
 (defn test1
@@ -42,5 +43,15 @@
 
 (defn reading-test
   []
-  (with-wb "test_poi.xls"
-    (sheet->matrix 0 true)))
+  (let [data (with-wb "test_poi.xls" (sheet->matrix 0 true))
+        n-cols (fn [r-idx expected]
+                 (->> (nth data r-idx)
+                      count
+                      (= expected)))]
+    (assert (n-cols 0 2))
+    (assert (n-cols 1 2))
+    (assert (n-cols 2 5))
+    (assert (n-cols 3 5))
+    (assert (n-cols 4 5))
+    (assert (n-cols 5 2))
+    data))
