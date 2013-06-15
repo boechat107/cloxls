@@ -2,11 +2,13 @@
     "References:
         http://poi.apache.org/spreadsheet/quick-guide.html"
   (:import 
-   [java.io IOException FileOutputStream FileInputStream]
-   [org.apache.poi.hssf.usermodel HSSFWorkbook HSSFCell HSSFSheet HSSFRow]
+   [java.io IOException File FileOutputStream FileInputStream]
+   [org.apache.poi.hssf.usermodel HSSFWorkbook HSSFCell HSSFSheet HSSFRow HSSFClientAnchor]
    [org.apache.poi.ss.util CellRangeAddress]
    [org.apache.poi.poifs.filesystem POIFSFileSystem]))
 
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* true)
 
 (defonce ^{:dynamic true
            :doc "This variable is bound to the created workbook when the macro
@@ -119,14 +121,45 @@
 
 
 (defn create-2d-data!
-  "Adds the data to a sheet as a matrix, starting from line r-start and column c-start."
+  "Adds the data to a sheet as a matrix, starting from line r-start and column
+  c-start."
   ([data] (create-2d-data! *sheet* 0 0 data))
   ([r-start c-start data] (create-2d-data! *sheet* r-start c-start data))
   ([sheet r-start c-start data]
-   {:pre [(instance? HSSFSheet sheet) (integer? r-start) (integer? c-start) (coll? data)]}
+   {:pre [(instance? HSSFSheet sheet) (integer? r-start)
+          (integer? c-start) (coll? data)]}
    (doseq [[r-id ld] (map vector (coll-idx-data data r-start) data)]
      (create-row-data! sheet r-id c-start ld))))
 
+(defn- get-pic-idx 
+  "Adds a picture to a workbook and returns its index."
+  [wb pic-path]
+  (try 
+    (let [pic (File. pic-path)
+          pic-data (byte-array (.length pic))]
+      (doto (FileInputStream. pic)
+        (.read pic-data))
+      (.addPicture wb pic-data 
+                   (condp contains? (-> (re-find #"\.\w+$" pic-path)
+                                        clojure.string/lower-case)
+                     #{".png"} (.PICTURE_TYPE_PNG HSSFWorkbook)
+                     #{".jpeg" ".jpg"} (.PICTURE_TYPE_JPEG HSSFWorkbook))))
+    (catch IOException e (.getMessage e))
+    (catch Exception e (.getMessage e))))
+
+(defn insert-picture!
+  "Inserts a picture into a sheet.
+  References:
+  http://stackoverflow.com/questions/1125488/how-to-add-images-in-hssfcell-in-apache-poi"
+  ([pic-path] (insert-picture! *wb* *sheet* pic-path))
+  ([wb sheet pic-path]
+   (doto (or (.getDrawingPatriarch sheet) (.createDrawingPatriarch sheet))
+     (.createPicture
+       ;; fixme: set position.
+       (doto (HSSFClientAnchor. 0 0 0 0 1 1 2 2)
+         ;; Move, but don't size with cells.
+         (.setAnchorType 2))
+       (get-pic-idx wb pic-path)))))
 
 ;; ============== Reading cell contents ==============================
 
