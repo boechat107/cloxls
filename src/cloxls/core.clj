@@ -268,12 +268,15 @@
         font-conf (:font rule-map)
         cf-rule (.createConditionalFormattingRule sheet-cf rule)]
     (when font-conf
-      (doto (.createFontFormatting cf-rule)
-        (.setFontStyle (or (:italic font-conf) false) 
-                       (or (:bold font-conf) false))
+      (let [ff (.createFontFormatting cf-rule)] 
+        (when (or (:italic font-conf) (:bold font-conf))
+          ;; fixme: there is not way to set just one of the styles.
+          (.setFontStyle ff 
+                         (or (:italic font-conf) false)
+                         (or (:bold font-conf) false)))
         (when (:color font-conf)
-          (.setFontColorIndex (->> (:color font-conf)
-                                   (get-color-idx wb))))))
+          (.setFontColorIndex ff (->> (:color font-conf)
+                                      (get-color-idx wb))))))
     cf-rule))
 
 (defn conditional-formatting!

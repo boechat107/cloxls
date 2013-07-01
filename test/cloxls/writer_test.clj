@@ -1,7 +1,8 @@
 (ns cloxls.writer-test
   (:use
+    [clojure.test]
     [cloxls.core]
-    :reload-all))
+    ))
 
 
 (defn test1
@@ -41,8 +42,8 @@
       (autosize-columns!))))
 
 
-(defn reading-test
-  []
+(deftest reading-test
+  (writing-test)
   (let [data (with-wb "test_poi.xls" (sheet->matrix 0 true))
         n-cols (fn [r-idx expected]
                  (->> (nth data r-idx)
