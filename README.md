@@ -8,7 +8,7 @@ A Clojure library designed to write XLS files using the
 Add to the dependencies of the leiningen project:
 
 ```clj
-[org.clojars.boechat107/cloxls "0.2.0"]
+[org.clojars.boechat107/cloxls "0.2.1-SNAPSHOT"]
 ```
 
 ## Usage

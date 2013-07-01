@@ -271,8 +271,9 @@
       (doto (.createFontFormatting cf-rule)
         (.setFontStyle (or (:italic font-conf) false) 
                        (or (:bold font-conf) false))
-        (.setFontColorIndex (->> (:color font-conf)
-                                 (get-color-idx wb)))))
+        (when (:color font-conf)
+          (.setFontColorIndex (->> (:color font-conf)
+                                   (get-color-idx wb))))))
     cf-rule))
 
 (defn conditional-formatting!
