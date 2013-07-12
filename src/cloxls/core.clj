@@ -340,4 +340,9 @@
     ;; font-obj is set into csty-obj to create a new font style.
     (.setFont csty-obj font-obj)
     (doseq [^Cell cell (map #(get-cell (% 0) (% 1)) cells)]
-      (.setCellStyle cell csty-obj))))
+      (.setCellStyle cell csty-obj)
+      ;; Changes the height of the entire row, if the size is greater than the
+      ;; previous row height.
+      (let [^Row row-obj (.getRow cell)]
+        (when (and size (> size (.getHeightInPoints row-obj)))
+          (.setHeightInPoints row-obj (+ 2 size)))))))
