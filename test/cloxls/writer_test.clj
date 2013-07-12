@@ -44,7 +44,8 @@
       (autosize-columns!))))
 
 
-(deftest reading-test
+(defn reading-test
+  []
   (writing-test)
   (let [data (with-wb "test_poi.xls" (sheet->matrix 0 true))
         n-cols (fn [r-idx expected]

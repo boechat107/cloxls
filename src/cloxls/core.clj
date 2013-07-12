@@ -40,8 +40,11 @@
   [filename & body]
   `(let [file# (FileInputStream. ~filename)]
      (binding [*wb* (HSSFWorkbook. (POIFSFileSystem. file#))]
-       (let [res# (do ~@body)] 
+       (let [res# (do ~@body)]
          (.close file#)
+         (doto (FileOutputStream. ~filename)
+           (#(.write *wb* %))
+           (.close))
          res#))))
 
 ;; ============== Sheet manipulation ==============================
