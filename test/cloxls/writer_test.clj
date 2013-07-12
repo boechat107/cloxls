@@ -32,6 +32,8 @@
       (create-row-data! 5 ["Form" "=B4+B7"])
       ;; Add data to the column E.
       (create-col-data! 4 2 ["Column" "data"])
+      ;; Sets the font's size of A1.
+      (set-font-style! 0 0 :size 30)
       ;; Conditional formatting: change manually the values of the cells composing
       ;; the rule and see what happens! :)
       (conditional-formatting! ["A4:B4" "A1:B1"]

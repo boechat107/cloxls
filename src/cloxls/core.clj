@@ -2,10 +2,12 @@
     "References:
         http://poi.apache.org/spreadsheet/quick-guide.html"
   (:import 
-   [java.io IOException File FileOutputStream FileInputStream]
-   [org.apache.poi.hssf.usermodel HSSFWorkbook HSSFCell HSSFSheet HSSFRow HSSFClientAnchor]
-   [org.apache.poi.ss.util CellRangeAddress]
-   [org.apache.poi.poifs.filesystem POIFSFileSystem]))
+    [java.io IOException File FileOutputStream FileInputStream]
+    [org.apache.poi.hssf.usermodel HSSFWorkbook HSSFCell HSSFSheet HSSFRow HSSFClientAnchor]
+    [org.apache.poi.ss.util CellRangeAddress]
+    [org.apache.poi.poifs.filesystem POIFSFileSystem]
+    [org.apache.poi.ss.usermodel Row Cell Workbook Sheet]
+    [org.apache.poi.ss.usermodel Font CellStyle]))
 
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* true)
@@ -201,6 +203,13 @@
   [row]
   (map #(.getCell row %) (range (.getLastCellNum row))))
 
+(defn get-cell
+  "Returns a Cell object whose coordinates in the sheet is given by the numbers 
+  x and y."
+  [x y]
+  (-> (.getRow *sheet* x)
+      (.getCell y)))
+
 (defn sheet->matrix
   "Gets the contents of specific sheet of a workbook. Formulas are returned as calculated 
    values if it is possible.
@@ -307,3 +316,28 @@
           (into-array)
           (.addConditionalFormatting sheet-cf reg-array))
      nil)))
+
+(defn set-font-style!
+  "Sets the font style of the desired cells.
+  :size     Sets the font size.
+  Ex.:
+  ;; Sets the font size of the cell B2 to 24.
+  (set-font-style 1 1 :size 24)
+  ;; Now the font size of the cells A1:C1 are seted.
+  (set-font-style [[0 0] [0 1] [0 2]] :size 24)"
+  [cells-x opts-y & opts]
+  {:pre [(or (and (number? cells-x) (number? opts-y)) (sequential? cells-x))]}
+  (let [^Workbook wb *wb*
+        [cells opts] (if (sequential? cells-x)
+                       [cells-x (conj opts opts-y)]
+                       (vector [[cells-x opts-y]] opts))
+        opts-map (when opts (apply array-map opts))
+        size (short (:size opts-map))
+        ^Font font-obj (.createFont wb)
+        ^CellStyle csty-obj (.createCellStyle wb)]
+    (when size 
+      (.setFontHeightInPoints font-obj size))
+    ;; font-obj is set into csty-obj to create a new font style.
+    (.setFont csty-obj font-obj)
+    (doseq [^Cell cell (map #(get-cell (% 0) (% 1)) cells)]
+      (.setCellStyle cell csty-obj))))
