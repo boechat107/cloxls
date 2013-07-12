@@ -5,7 +5,7 @@ A Clojure library designed to write XLS files using the
 
 ## Installation
 
-Add to the dependencies of the leiningen project:
+Add the last version of **cloxls** to the dependencies of the leiningen project:
 
 ```clj
 [org.clojars.boechat107/cloxls "0.2.1-SNAPSHOT"]
@@ -31,12 +31,14 @@ Add to the dependencies of the leiningen project:
       (create-row-data! 5 ["Form" "=B4+B7"])
       ;; Add data to the column E, starting at row 2.
       (create-col-data! 4 2 ["Column" "data"])
+      ;; Sets the font's size of A1.
+      (set-font-style! 0 0 :size 30)
       ;; Conditional formatting: change manually the values of the cells composing
       ;; the rule and see what happens! :)
       (conditional-formatting! ["A4:B4" "A1:B1"]
                                [{:rule "$B$2>10", :font {:color :green}}
-                                ;; Using RGB values.
-                                {:rule "$B$2<=10", :font {:color {:r 0 :g 0 :b 200}}}])
+                                ;; Using a RGB similar color.
+                                {:rule "$B$2<=10", :font {:color [150 0 50]}}])
       ;; Resize the columns' width to fit contents.
       (autosize-columns!))))
 
@@ -58,6 +60,7 @@ See [docs](http://boechat107.github.com/cloxls) for more details about the libra
 * XLS files can be read and its contents returned as clojure vectors;
 * The formulas of a XLS file can be evaluated before a reading, getting the result values 
 instead of the formula definition.
+* Change the font's style of cells.
 
 ## License
 
