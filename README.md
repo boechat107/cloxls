@@ -29,7 +29,7 @@ Add the last version of **cloxls** to the dependencies of the leiningen project:
       (create-row-data! 4 ["Alternative" "function"])
       (create-row-data! 4 3 ["Additional" "information"])
       (create-row-data! 5 ["Form" "=B4+B7"])
-      ;; Add data to the column E, starting at row 2.
+      ;; Add data to the column E.
       (create-col-data! 4 2 ["Column" "data"])
       ;; Sets the font's size of A1.
       (set-font-style! 0 0 :size 30)
@@ -39,8 +39,10 @@ Add the last version of **cloxls** to the dependencies of the leiningen project:
                                [{:rule "$B$2>10", :font {:color :green}}
                                 ;; Using a RGB similar color.
                                 {:rule "$B$2<=10", :font {:color [150 0 50]}}])
+      ;; Inserts a picture at cell F6 (top left point of the picture).
+      (insert-picture! "test/chart.png" 5 5)
       ;; Resize the columns' width to fit contents.
-      (autosize-columns!))))
+      (autosize-columns!)))
 
 (defn reading-test
   []
@@ -61,6 +63,7 @@ See [docs](http://boechat107.github.com/cloxls) for more details about the libra
 * The formulas of a XLS file can be evaluated before a reading, getting the result values 
 instead of the formula definition.
 * Change the font's style of cells.
+* Insert pictures.
 
 ## License
 
