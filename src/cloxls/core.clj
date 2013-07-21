@@ -195,6 +195,11 @@
     (.getSheetAt wb sheet-id)
     (.getSheet wb sheet-id)))
 
+(defn- get-row
+  "Returns the idx Row of a Sheet."
+  ^Row [idx]
+  (.getRow *sheet* idx))
+
 (defn get-rows
   "Returns a sequence of row objects of the given sheet."
   [sheet]
@@ -348,3 +353,34 @@
       (let [^Row row-obj (.getRow cell)]
         (when (and size (> size (.getHeightInPoints row-obj)))
           (.setHeightInPoints row-obj (+ 2 size)))))))
+
+(let [border-sty {:thin CellStyle/BORDER_THIN
+                  :medium CellStyle/BORDER_MEDIUM
+                  ;; todo: more styles
+                  }]
+  (defn set-borders!
+    [x-range y-range & opts]
+    (let [mopts (apply array-map opts)
+          opt-getter #(get border-sty (get mopts %))
+          bb (opt-getter :bottom)
+          lb (opt-getter :left)
+          tb (opt-getter :top)
+          rb (opt-getter :right)
+          ^CellStyle sty-obj (.createCellStyle ^Workbook *wb*)]
+      ;; Bottom
+      (when bb 
+        (.setBorderBottom sty-obj bb)) 
+      ;; Left 
+      (when lb
+        (.setBorderLeft sty-obj lb))
+      ;; Top
+      (when tb 
+        (.setBorderTop sty-obj tb))
+      ;; Right
+      (when rb 
+        (.setBorderRight sty-obj rb))
+      (doseq [y y-range]
+        (let [row (get-row y)]
+          (doseq [x x-range]
+            (doto (.getCell row x)
+              (.setCellStyle sty-obj))))))))
