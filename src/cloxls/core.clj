@@ -157,11 +157,12 @@
   ([^Workbook wb ^HSSFSheet sheet pic-path]
    (let [^HSSFPatriarch patr (or (.getDrawingPatriarch sheet)
                                  (.createDrawingPatriarch sheet))]
-     (.createPicture patr
-                     (doto (HSSFClientAnchor. 0 0 0 0 1 1 2 2)
-                       ;; Move, but don't size with cells.
-                       (.setAnchorType 2))
-                     (get-pic-idx wb pic-path)))))
+     (doto (.createPicture patr
+                           (doto (HSSFClientAnchor. 0 0 0 0 1 1 2 2)
+                             ;; Move, but don't size with cells.
+                             (.setAnchorType 2))
+                           (get-pic-idx wb pic-path))
+       (.resize)))))
 
 ;; ============== Reading cell contents ==============================
 
