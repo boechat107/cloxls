@@ -366,21 +366,23 @@
           lb (opt-getter :left)
           tb (opt-getter :top)
           rb (opt-getter :right)
-          ^CellStyle sty-obj (.createCellStyle ^Workbook *wb*)]
-      ;; Bottom
-      (when bb 
-        (.setBorderBottom sty-obj bb)) 
-      ;; Left 
-      (when lb
-        (.setBorderLeft sty-obj lb))
-      ;; Top
-      (when tb 
-        (.setBorderTop sty-obj tb))
-      ;; Right
-      (when rb 
-        (.setBorderRight sty-obj rb))
+          gen-sty (.createCellStyle ^Workbook *wb*)]
       (doseq [y y-range]
         (let [row (get-row y)]
           (doseq [x x-range]
-            (doto (.getCell row x)
-              (.setCellStyle sty-obj))))))))
+            (let [cell (.getCell row x)
+                  ^CellStyle sty-obj (or (.getCellStyle cell) gen-sty)] 
+              (.setCellStyle cell sty-obj)
+              ;; Bottom
+              (when bb 
+                (.setBorderBottom sty-obj bb)) 
+              ;; Left 
+              (when lb
+                (.setBorderLeft sty-obj lb))
+              ;; Top
+              (when tb 
+                (.setBorderTop sty-obj tb))
+              ;; Right
+              (when rb 
+                (.setBorderRight sty-obj rb)) 
+              )))))))
