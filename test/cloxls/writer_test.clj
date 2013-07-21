@@ -40,6 +40,8 @@
                                [{:rule "$B$2>10", :font {:color :green}}
                                 ;; Using a RGB similar color.
                                 {:rule "$B$2<=10", :font {:color [150 0 50]}}])
+      ;; Inserts a picture at cell F6 (top left point of the picture).
+      (insert-picture! "test/chart.png" 5 5)
       ;; Resize the columns' width to fit contents.
       (autosize-columns!))))
 

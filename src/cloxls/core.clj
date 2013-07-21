@@ -150,15 +150,16 @@
                    #{".jpeg" ".jpg"} HSSFWorkbook/PICTURE_TYPE_JPEG))))
 
 (defn insert-picture!
-  "Inserts a picture into a sheet.
+  "Inserts a picture into a sheet at the [x,y] position (top left coordinate of the
+  picture).
   References:
   http://stackoverflow.com/questions/1125488/how-to-add-images-in-hssfcell-in-apache-poi"
-  ([pic-path] (insert-picture! *wb* *sheet* pic-path))
-  ([^Workbook wb ^HSSFSheet sheet pic-path]
+  ([pic-path x y] (insert-picture! *wb* *sheet* pic-path x y))
+  ([^Workbook wb ^HSSFSheet sheet pic-path x y]
    (let [^HSSFPatriarch patr (or (.getDrawingPatriarch sheet)
                                  (.createDrawingPatriarch sheet))]
      (doto (.createPicture patr
-                           (doto (HSSFClientAnchor. 0 0 0 0 1 1 2 2)
+                           (doto (HSSFClientAnchor. 0 0 0 0 x y x y)
                              ;; Move, but don't size with cells.
                              (.setAnchorType 2))
                            (get-pic-idx wb pic-path))
